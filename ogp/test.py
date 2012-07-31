@@ -36,6 +36,15 @@ class test(unittest.TestCase):
     def test_is_not_valid(self):
         og = opengraph.OpenGraph(url='http://vdubmexico.com')
         self.assertFalse(og.is_valid())
+    
+    def test_required(self):
+        og = opengraph.OpenGraph(url='http://grooveshark.com', required_attrs=("description",), scrape=True)
+        self.assertTrue(og.is_valid())
+    
+    def test_scrape(self):
+        og = opengraph.OpenGraph(url='http://graingert.co.uk/', required_attrs=("description",), scrape=True)
+        self.assertTrue(og.is_valid())
+        self.assertTrue(og.items["description"])
 
     
 if __name__ == '__main__':

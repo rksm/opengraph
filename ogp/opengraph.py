@@ -8,16 +8,17 @@ class OpenGraph(object):
     """
     """
 
-    required_attrs = set(('title', 'type', 'image', 'url'))
+    
     scrape = False
 
-    def __init__(self, url=None, html=None, scrape=False, **kwargs):
+    def __init__(self, url=None, html=None, scrape=False, required_attrs = ('title', 'type', 'image', 'url'), **kwargs):
         # If scrape == True, then will try to fetch missing attribtues
         # from the page's body
         self.scrape = scrape
         self.url = url
         self.items = {}
-                
+        self.required_attrs = set(required_attrs)
+                        
         if url is not None:
             self.fetch(url)
             
@@ -42,15 +43,12 @@ class OpenGraph(object):
         for og in ogs:
             if og.has_key(u'content'):
                 self.items[og[u'property'][3:]]=og[u'content']
-
-        # Couldn't fetch all attrs from og tags, try scraping body
-        remaining_keys = self.required_attrs - set(self.items.viewkeys())
         
-        for key in remaining_keys:
-            try:
-                self.items[key] = getattr(self, 'scrape_%{key}'.format(key=key))(doc)
-            except AttributeError:
-                pass
+        # Couldn't fetch all attrs from og tags, try scraping body
+        if self.scrape:
+            remaining_keys = self.required_attrs - set(self.items.viewkeys())
+            for key in remaining_keys:
+                self.items[key] = getattr(self, 'scrape_{key}'.format(key=key))(doc)
         
     def is_valid(self):
         return self.required_attrs <= set(self.items.viewkeys())
@@ -82,4 +80,12 @@ class OpenGraph(object):
         return 'other'
 
     def scrape_url(self, doc):
-        return self._url
+        return self.url
+    
+    def scrape_description(self, doc):
+        ogs = doc.html.head.findAll(name='meta', attrs={"name":("description", "DC.description", "eprints.abstract")}, )
+        for og in ogs:
+            content = og.get("content", False)
+            if content:
+                return content
+        
