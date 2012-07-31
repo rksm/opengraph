@@ -3,7 +3,7 @@ OpenGraph is a module of python for parsing the Open Graph Protocol, you can rea
 Installation
 =============
 
-pip install opengraph
+pip install ogp
 
 Features
 =============
@@ -12,18 +12,17 @@ Features
 * Input and parsing from a specific url
 * Input and parsung from html previous extracted
 * HTML output
-* JSON output
 
 Usage
 ==============
 
 **From an URL**
 
->>> import opengraph
->>> video = opengraph.OpenGraph(url="http://www.youtube.com/watch?v=q3ixBmDzylQ")
+>>> import ogp
+>>> video = ogp.OpenGraph(url="http://www.youtube.com/watch?v=q3ixBmDzylQ")
 >>> video.is_valid()
 True
->>> for x,y in video.items():
+>>> for x,y in video.items.items():
 ...     print "%-15s => %s" % (x, y)
 ... 
 site_name       => YouTube
@@ -50,13 +49,7 @@ type            => video
 ... </head>
 ... </html>
 ... """
->>> movie = opengraph.OpenGraph() # or you can instantiate as follows: opengraph.OpenGraph(html=HTML)
+>>> movie = ogp.OpenGraph() # or you can instantiate as follows: opengraph.OpenGraph(html=HTML)
 >>> movie.parser(HTML)
 >>> video.is_valid()
 True
-
-**Generate JSON or HTML**
-
->>> 
->>>
->>>

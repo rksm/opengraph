@@ -2,47 +2,27 @@
 
 import re
 import urllib2
-try:
-    from bs4 import BeautifulSoup
-except ImportError:
-    from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup
 
-global import_json
-try:
-    import json
-    import_json = True
-except ImportError:
-    import_json = False
-
-class OpenGraph(dict):
+class OpenGraph(object):
     """
     """
 
-    required_attrs = ['title', 'type', 'image', 'url']
+    required_attrs = set(('title', 'type', 'image', 'url'))
     scrape = False
 
     def __init__(self, url=None, html=None, scrape=False, **kwargs):
         # If scrape == True, then will try to fetch missing attribtues
         # from the page's body
         self.scrape = scrape
-        self._url = url
-
-        for k in kwargs.keys():
-            self[k] = kwargs[k]
-        
-        dict.__init__(self)
+        self.url = url
+        self.items = {}
                 
         if url is not None:
             self.fetch(url)
             
         if html is not None:
             self.parser(html)
-
-    def __setattr__(self, name, val):
-        self[name] = val
-
-    def __getattr__(self, name):
-        return self[name]
             
     def fetch(self, url):
         """
@@ -61,45 +41,31 @@ class OpenGraph(dict):
         ogs = doc.html.head.findAll(property=re.compile(r'^og'))
         for og in ogs:
             if og.has_key(u'content'):
-                self[og[u'property'][3:]]=og[u'content']
+                self.items[og[u'property'][3:]]=og[u'content']
 
         # Couldn't fetch all attrs from og tags, try scraping body
-        if not self.is_valid() and self.scrape:
-            for attr in self.required_attrs:
-                if not hasattr(self, attr):
-                    try:
-                        self[attr] = getattr(self, 'scrape_%s' % attr)(doc)
-                    except AttributeError:
-                        pass
+        remaining_keys = self.required_attrs - set(self.items.viewkeys())
+        
+        for key in remaining_keys:
+            try:
+                self.items[key] = getattr(self, 'scrape_%{key}'.format(key=key))(doc)
+            except AttributeError:
+                pass
         
     def is_valid(self):
-        return all([hasattr(self, attr) for attr in self.required_attrs])
+        return self.required_attrs <= set(self.items.viewkeys())
         
     def to_html(self):
         if not self.is_valid():
             return u"<meta property=\"og:error\" content=\"og metadata is not valid\" />"
             
         meta = u""
-        for key,value in self.iteritems():
+        for key,value in self.items.iteritems():
             meta += u"\n<meta property=\"og:%s\" content=\"%s\" />" %(key, value)
         meta += u"\n"
         
         return meta
         
-    def to_json(self):
-        # TODO: force unicode
-        global import_json
-        if not import_json:
-            return "{'error':'there isn't json module'}"
-
-        if not self.is_valid():
-            return json.dumps({'error':'og metadata is not valid'})
-            
-        return json.dumps(self)
-        
-    def to_xml(self):
-        pass
-
     def scrape_image(self, doc):
         images = [dict(img.attrs)['src'] 
             for img in doc.html.body.findAll('img')]
