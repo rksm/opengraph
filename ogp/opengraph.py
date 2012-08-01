@@ -90,4 +90,10 @@ class OpenGraph(object):
             content = og.get("content", False)
             if content:
                 return content
+        else:
+            heading = doc.html.find(re.compile("h[1-6]"))
+            if heading:
+                return heading.text
+            else:
+                return doc.html.find("p").text
         
