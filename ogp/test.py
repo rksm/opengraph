@@ -45,6 +45,14 @@ class test(unittest.TestCase):
         og = opengraph.OpenGraph(url='http://graingert.co.uk/', required_attrs=("description",), scrape=True)
         self.assertTrue(og.is_valid())
         self.assertTrue(og.items["description"])
+        
+        og = opengraph.OpenGraph(url='http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html', required_attrs=("description",), scrape=True)
+        self.assertEqual(og.items["description"], "Beautiful Soup Documentation")
+
+    
+    def test_absolute(self):
+        og = opengraph.OpenGraph(url='http://www.crummy.com/software/BeautifulSoup/bs3/documentation.html', required_attrs=("image",), scrape=True)
+        self.assertEqual(og.items["image"], "http://www.crummy.com/software/BeautifulSoup/bs3/6.1.jpg")
 
     
 if __name__ == '__main__':
