@@ -3,6 +3,8 @@
 import re
 import urllib2
 from BeautifulSoup import BeautifulSoup
+from contextlib import closing
+from urlparse import urljoin
 
 class OpenGraph(object):
     """
@@ -11,27 +13,23 @@ class OpenGraph(object):
     
     scrape = False
 
-    def __init__(self, url=None, html=None, scrape=False, required_attrs = ('title', 'type', 'image', 'url'), **kwargs):
+    def __init__(self, url="http://example.com", html=None, scrape=False, required_attrs = set(('title', 'type', 'image', 'url')), **kwargs):
         # If scrape == True, then will try to fetch missing attribtues
         # from the page's body
         self.scrape = scrape
         self.url = url
         self.items = {}
         self.required_attrs = set(required_attrs)
-                        
-        if url is not None:
-            self.fetch(url)
             
-        if html is not None:
-            self.parser(html)
-            
-    def fetch(self, url):
-        """
-        """
-        raw = urllib2.urlopen(url)
-        html = raw.read()
-        return self.parser(html)
+        if not html:
+            with closing(urllib2.urlopen(url)) as raw:
+                html = raw.read()
         
+        self.parser(html)
+    
+    def absolute(self, url):
+        return urljoin(self.url, url)
+    
     def parser(self, html):
         """
         """
@@ -49,6 +47,10 @@ class OpenGraph(object):
             remaining_keys = self.required_attrs - set(self.items.viewkeys())
             for key in remaining_keys:
                 self.items[key] = getattr(self, 'scrape_{key}'.format(key=key))(doc)
+        
+        image = self.items.get("image", False)
+        if image:
+            self.items["image"] = self.absolute(self.items["image"])
         
     def is_valid(self):
         return self.required_attrs <= set(self.items.viewkeys())
