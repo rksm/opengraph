@@ -1,1 +1,3 @@
-from opengraph import OpenGraph
+from .opengraph import OpenGraph
+
+__all__ = ("OpenGraph",)
